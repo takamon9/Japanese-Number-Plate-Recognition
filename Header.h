@@ -30,6 +30,11 @@ VideoCapture capture;
 
 CascadeClassifier commNumPlate_cascade;
 
+struct sort_struct {
+	int arrX;
+	Mat numRect;
+
+};
 
 #endif
 
