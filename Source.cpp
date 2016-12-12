@@ -78,7 +78,7 @@ int main(int, char**)
 
 			int count = 0;
 			for (int i = 0; i < 10; i++) {
-				if (sa[i].numRect.empty) {
+				if (sa[i].numRect.empty()) {
 					break;
 				}
 				stringstream nameImgFile;
