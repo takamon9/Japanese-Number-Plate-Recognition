@@ -19,7 +19,20 @@ Scalar colorComm(255, 255, 0);
 
 Mat grayNP;
 Mat cropNumberPlate, resizedNP, commercialPlate;
-Mat original, image, gray;
+Mat original, image, gray,concatnated,number[4];
+
+string detectedNumber;
+
+float numScale = 1.0;
+int numThik = 2;
+int point4 = 20;
+int numHight = 35;
+int numArrWidth = 50;
+int numArrHight = 50;
+
+vector<Mat> number_array{ number[0],number[1],number[2],number[3] };
+
+Point maxLocationResult;
 
 string uname = "root";
 string password = "taka1974";
@@ -240,10 +253,11 @@ int processNeuralNetwork(string nameMatWindow) {
 	fclose(fop);
 
 	Mat neuralMat = binaryNumMat.row(0);
-	Point maxLocationResult;
 	neuron->predict(neuralMat, result);
 	minMaxLoc(result, NULL, NULL, NULL, &maxLocationResult);
-
+	stringstream ss;
+	ss << maxLocationResult.x;
+	detectedNumber = ss.str();
 	return maxLocationResult.x;
 }
 
