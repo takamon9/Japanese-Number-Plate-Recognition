@@ -26,11 +26,8 @@ string password = "taka1974";
 string ip_address = "http://" + uname + ":" + password + "@169.254.158.20/mjpg/video.mjpg";
 
 vector<Rect> commPlate;
-
 VideoCapture capture;
-
 CascadeClassifier commNumPlate_cascade;
-
 
 struct sort_struct {
 	int xLocation;
@@ -42,8 +39,7 @@ const int N_HIDDEN = 10;
 const int N_OUTPUT = 10;
 
 vector<int> layer_sizes = { N_INPUT, N_HIDDEN, N_OUTPUT };
-
-
+Ptr<ANN_MLP> neuron = ANN_MLP::create();
 
 
 void *matrixArray(Mat matrixName, string fileN)
@@ -53,8 +49,10 @@ void *matrixArray(Mat matrixName, string fileN)
 	Mat resizedMat;
 
 	resize(matrixName, resizedMat, Size(10, 20));
+
 	fn << "dat/" << fileN << ".dat";
-	inFile.open(fn.str(), ios::in | ios::app | ios::binary);
+	inFile.open(fn.str(), ios::out | ios::trunc); inFile.close(); //delete contents
+	inFile.open(fn.str(), ios::in | ios::binary);
 	inFile.seekg(0);
 
 	for (int i = 0; i < resizedMat.rows; i++) {
@@ -83,8 +81,6 @@ char *matrixAbs()
 	return lines;
 	delete[] lines;
 }
-
-Ptr<ANN_MLP> neuron = ANN_MLP::create();
 
  void trainNeuron() {
 
