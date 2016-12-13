@@ -5,7 +5,7 @@ int main(int, char**)
 
 	char fname[100];
 
-	int countTimer = 0;
+	int count = 0;
 
 	if (!capture.open(ip_address))
 	{
@@ -23,7 +23,7 @@ int main(int, char**)
 
 	for (;;)
 	{
-
+		
 		time_t t;
 
 		if (!capture.read(original)) {
@@ -48,44 +48,50 @@ int main(int, char**)
 
 			//	strftime(fname, sizeof(fname), "C:/ImageStorage/commercialNP/commNP_%y%m_%d_%H_%M_%S.png", localtime(&t));
 			//	imwrite(fname, grayNP);
-			//	countTimer++;
-			//	cout << "We got Commercial Number Plate.No." << countTimer << endl;
+			//	count++;
+			//	cout << "We got Commercial Number Plate.No." << count << endl;
 
-			Mat binaryNP,cannyNP;
+			Mat binaryNP, cannyNP;
 			//blur(grayNP, grayNP, Size(3, 3), Point(-1, -1));
 			threshold(grayNP, binaryNP, 0, 255, THRESH_BINARY | THRESH_OTSU);
 			Canny(binaryNP, cannyNP, 3, 3);
 			//	imshow("binary", binaryNP);
 			vector<vector<Point> > contours;
 			findContours(cannyNP, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+			Rect pointArea[200];
 			Mat contoursMat = resizedNP.clone();
-			sort_struct sa[10];
+			int count = 0;
+			sort_struct sortA[10];
 			vector<sort_struct> sortArray;
 
 			for (int i = 0; i < contours.size(); i++)
 			{
-				Rect pointArea = boundingRect(contours[i]);
-				double contourRatio = (float)pointArea.width / pointArea.height;
-				if (contourRatio > 0.4  && contourRatio < 0.6 && pointArea.height > 30 && pointArea.height < 55) {
-					rectangle(contoursMat, pointArea, Scalar(0, 255, 0), 1, 8);
-					sortArray[i] = { pointArea.x, Mat(binaryNP,pointArea)};
+				pointArea[i] = boundingRect(contours[i]);
+				double contourRatio = (float)pointArea[i].width / pointArea[i].height;
+				if (contourRatio > 0.4  && contourRatio < 0.6 && pointArea[i].height > 30 && pointArea[i].height < 55)
+				{
+					rectangle(contoursMat, pointArea[i], Scalar(0, 255, 0), 1, 8);
+					sortA[count] = { pointArea[i].x,Mat(binaryNP,pointArea[i]) };
+					sortArray.push_back(sortA[count]);
+					count++;
 				}
 			}
 
-			sort(sortArray.begin(),sortArray.end(),
-				[](const sort_struct& a, const sort_struct& b) {return (a.arrX < b.arrX); }
-			);
+				sort(sortArray.begin(), sortArray.end(),
+					[](const sort_struct& a, const sort_struct& b) {return a.xLocation < b.xLocation; });
 
-			int count = 0;
-			for (int i = 0; i < 10; i++) {
-				if (sa[i].numRect.empty()) {
-					break;
-				}
+				for (int i = 0; i < sortArray.size() ; i++) {
+
 				stringstream nameImgFile;
-				nameImgFile << "img/num/left" << count << ".png";
-				imwrite(nameImgFile.str(), sa[i].numRect);
-				count++;
-			}
+				nameImgFile << "img/num/left" << i << ".png";
+				imwrite(nameImgFile.str(), sortArray[i].numRect);
+				stringstream nameMatWindow;
+				nameMatWindow << i << "window";
+				imshow(nameMatWindow.str(), sortArray[i].numRect);
+				cout << sortArray[i].xLocation << ",";
+				}
+		
+			cout << endl;
 
 			imshow("contour", contoursMat);
 			imshow("captured number", resizedNP);
@@ -100,3 +106,4 @@ int main(int, char**)
 
 	return 0;
 }
+
