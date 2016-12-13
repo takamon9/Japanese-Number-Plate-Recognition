@@ -3,9 +3,9 @@
 int main(int, char**)
 {
 
-	char fname[100];
+	char fname[100];	
 
-	int count = 0;
+	void trainNeuron();
 
 	if (!capture.open(ip_address))
 	{
@@ -86,9 +86,12 @@ int main(int, char**)
 				nameImgFile << "img/num/left" << i << ".png";
 				imwrite(nameImgFile.str(), sortArray[i].numRect);
 				stringstream nameMatWindow;
-				nameMatWindow << i << "window";
+				nameMatWindow << "num" << i ;
 				imshow(nameMatWindow.str(), sortArray[i].numRect);
 				cout << sortArray[i].xLocation << ",";
+				matrixArray(sortArray[i].numRect, nameMatWindow.str());
+				processNeuralNetwork(nameMatWindow.str());
+
 				}
 		
 			cout << endl;
