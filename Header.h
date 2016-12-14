@@ -19,20 +19,7 @@ Scalar colorComm(255, 255, 0);
 
 Mat grayNP;
 Mat cropNumberPlate, resizedNP, commercialPlate;
-Mat original, image, gray,concatnated,number[4];
-
-string detectedNumber;
-
-float numScale = 1.0;
-int numThik = 2;
-int point4 = 20;
-int numHight = 35;
-int numArrWidth = 50;
-int numArrHight = 50;
-
-vector<Mat> number_array{ number[0],number[1],number[2],number[3] };
-
-Point maxLocationResult;
+Mat original, image, gray, concatnated, number[4];
 
 string uname = "root";
 string password = "taka1974";
@@ -47,15 +34,8 @@ struct sort_struct {
 	Mat numRect;
 };
 
-const int N_INPUT = 200;
-const int N_HIDDEN = 10;
-const int N_OUTPUT = 10;
 
-vector<int> layer_sizes = { N_INPUT, N_HIDDEN, N_OUTPUT };
-Ptr<ANN_MLP> neuron = ANN_MLP::create();
-
-
-void *matrixArray(Mat matrixName, string fileN)
+void matrixArray(Mat matrixName, string fileN)
 {
 	fstream inFile;
 	stringstream fn;
@@ -65,7 +45,7 @@ void *matrixArray(Mat matrixName, string fileN)
 
 	fn << "dat/" << fileN << ".dat";
 	inFile.open(fn.str(), ios::out | ios::trunc); inFile.close(); //delete contents
-	inFile.open(fn.str(), ios::in | ios::binary);
+	inFile.open(fn.str(), ios::in | ios::app | ios::binary);
 	inFile.seekg(0);
 
 	for (int i = 0; i < resizedMat.rows; i++) {
@@ -75,7 +55,6 @@ void *matrixArray(Mat matrixName, string fileN)
 		}
 	}
 	inFile.close();
-	return 0;
 }
 
 
@@ -95,14 +74,39 @@ char *matrixAbs()
 	delete[] lines;
 }
 
- void trainNeuron() {
+const int N_INPUT = 200;
+const int N_HIDDEN = 10;
+const int N_OUTPUT = 10;
 
-	neuron->setTrainMethod(ANN_MLP::RPROP);
-	neuron->setLayerSizes(layer_sizes);
-	neuron->setActivationFunction(ANN_MLP::SIGMOID_SYM, 0.66, 1);
-	neuron->setTermCriteria(TermCriteria());
+Mat neuralMat;
+Mat teacher;
+Mat teacher2;
 
-		Mat number_data = (Mat_<float>(10, 200) <<
+string detectedNumber;
+
+float numScale = 1.0;
+int numThik = 2;
+int point4 = 20;
+int numHight = 35;
+int numArrWidth = 50;
+int numArrHight = 50;
+
+Point maxLocationResult;
+vector<int> layer_sizes = { N_INPUT, N_HIDDEN, N_OUTPUT };
+
+namespace neuronTag {
+
+	Ptr<ANN_MLP> neuron = ANN_MLP::create();
+}
+
+void trainNeuron() {
+
+	neuronTag::neuron->setTrainMethod(ANN_MLP::RPROP);
+	neuronTag::neuron->setLayerSizes(layer_sizes);
+	neuronTag::neuron->setActivationFunction(ANN_MLP::SIGMOID_SYM, 0.66, 1);
+	neuronTag::neuron->setTermCriteria(TermCriteria());
+
+	Mat number_data = (Mat_<float>(10, 200) <<
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
 		1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1,
@@ -190,7 +194,7 @@ char *matrixAbs()
 		);
 	//		imshow("data", number_data);
 
-	Mat teacher = Mat(Size(10, 10), CV_32F);
+	teacher = Mat(Size(10, 10), CV_32F);
 	for (int j = 0; j < teacher.rows; j++)
 		for (int i = 0; i < teacher.cols; i++)
 		{
@@ -198,21 +202,23 @@ char *matrixAbs()
 			else teacher.at<float>(j, i) = 0.0f;
 		}
 
-	neuron->train(number_data, ROW_SAMPLE, teacher);
+	teacher2 = Mat(Size(10, 1), CV_32F);
+	for (int j = 0; j < teacher2.rows; j++)
+		for (int i = 0; i < teacher2.cols; i++)
+		{
+			if (i == j) teacher2.at<float>(j, i) = 1.0f;
+			else teacher2.at<float>(j, i) = 0.0f;
+		}
+
+	Mat results;
+	Mat predict;
+	neuronTag::neuron->train(number_data, ROW_SAMPLE, teacher);
+
 }
 
 int processNeuralNetwork(string nameMatWindow) {
-		
-	Mat original2, binaryOriginal2, result, binaryPredict;
 
-/*	Mat teacher = Mat(Size(10, 1), CV_32F);
-	for (int j = 0; j < teacher.rows; j++)
-		for (int i = 0; i < teacher.cols; i++)
-		{
-			if (i == j) teacher.at<float>(j, i) = 1.0f;
-			else teacher.at<float>(j, i) = 0.0f;
-		}
-*/
+	Mat original2, binaryOriginal2, result2, binaryPredict;
 
 	stringstream detectNum;
 	string str = ".str()";
@@ -222,7 +228,7 @@ int processNeuralNetwork(string nameMatWindow) {
 	string pngN = ".png";
 	string cc = ".dat";
 	string strBuf = folderN + bb + cc;   //"dat/" + fileN + ".dat"
-	string pngBuf = folderN + bb + pngN; 
+	string pngBuf = folderN + bb + pngN;
 
 	FILE* fop;
 
@@ -241,7 +247,7 @@ int processNeuralNetwork(string nameMatWindow) {
 	Mat binaryNumMat = Mat(Size(200, 1), CV_32F);
 	for (int i = 0; i < f; i++) {
 		intbuf[i] = buf[i] - 48;
-		}
+	}
 
 	for (int j = 0; j < binaryNumMat.rows; j++)
 		for (int i = 0; i < binaryNumMat.cols; i++)
@@ -251,15 +257,24 @@ int processNeuralNetwork(string nameMatWindow) {
 		}
 
 	fclose(fop);
+	
+	if (neuronTag::neuron->isTrained() == true) {
+		neuralMat = binaryNumMat.row(0);
+		neuronTag::neuron->predict(neuralMat, result2);
+		minMaxLoc(result2, NULL, NULL, NULL, &maxLocationResult);
+		//cout << maxLocationResult.x;
+		stringstream ss;
+		ss << maxLocationResult.x;
+		detectedNumber = ss.str();
 
-	Mat neuralMat = binaryNumMat.row(0);
-	neuron->predict(neuralMat, result);
-	minMaxLoc(result, NULL, NULL, NULL, &maxLocationResult);
-	stringstream ss;
-	ss << maxLocationResult.x;
-	detectedNumber = ss.str();
-	return maxLocationResult.x;
+		for (int j = 0; j < 10; j++)
+		{
+			cout << setw(6) << setprecision(3) << result2.at<float>(0, j) << " , ";
+		}
+		cout << endl;
+		return maxLocationResult.x;
+
+	}
 }
 
 #endif
-
