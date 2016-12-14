@@ -2,10 +2,11 @@
 
 int main(int, char**)
 {
+	neuronTag::neuron = ANN_MLP::create();
 
 	char fname[100];
 
-	void trainNeuron();
+	trainNeuron();
 
 	if (!capture.open(ip_address))
 	{
@@ -23,7 +24,7 @@ int main(int, char**)
 
 	for (int j = 0; j < 4; j++) {
 
-		number[0].create(numArrWidth, numArrHight, CV_8SC3);
+		number[j].create(numArrWidth, numArrHight, CV_8SC3);
 
 	}
 
@@ -39,15 +40,13 @@ int main(int, char**)
 		image = original.clone();
 		cvtColor(original, gray, CV_BGR2GRAY);
 
-		trainNeuron();
-
 		commNumPlate_cascade.detectMultiScale(gray, commPlate, 1.3, 5);
 		for (int i = 0; i < commPlate.size(); i++)
 		{
-			number_array[0] = { 0 };
-			number_array[1] = { 0 };
-			number_array[2] = { 0 };
-			number_array[3] = { 0 };
+			number[0] =  0 ;
+			number[1] =  0 ;
+			number[2] =  0 ;
+			number[3] =  0 ;
 
 			t = time(NULL);
 			Point pt1(commPlate[i].x + commPlate[i].width, commPlate[i].y + commPlate[i].height);
@@ -76,7 +75,7 @@ int main(int, char**)
 			sort_struct sortA[10];
 
 			vector<sort_struct> sortArray;
-			
+
 			for (int i = 0; i < contours.size(); i++)
 			{
 				pointArea[i] = boundingRect(contours[i]);
@@ -94,26 +93,31 @@ int main(int, char**)
 				[](const sort_struct& a, const sort_struct& b) {return a.xLocation < b.xLocation; });
 
 			for (int i = 0; i < sortArray.size(); i++) {
-
-				stringstream nameImgFile;
-				nameImgFile << "img/num/left" << i << ".png";
-				imwrite(nameImgFile.str(), sortArray[i].numRect);
+				if (i > 3) {
+					break;
+				}
+			//	stringstream nameImgFile;
+			//	nameImgFile << "img/num/left" << i << ".png";
+			//	imwrite(nameImgFile.str(), sortArray[i].numRect);
 				stringstream nameMatWindow;
 				nameMatWindow << "num" << i;
-				imshow(nameMatWindow.str(), sortArray[i].numRect);
-				cout << sortArray[i].xLocation << ",";
+			//	imshow(nameMatWindow.str(), sortArray[i].numRect);
+			//	cout << sortArray[i].xLocation << ",";
 				matrixArray(sortArray[i].numRect, nameMatWindow.str());
 				processNeuralNetwork(nameMatWindow.str());
-				putText(number_array[i],detectedNumber, Point(point4, numHight), CV_FONT_HERSHEY_SIMPLEX, numScale, Scalar(0, 255, 0), numThik, 8);
-			}
+			//	cout << detectedNumber;
+
+				putText(number[i], detectedNumber, Point(point4, numHight), CV_FONT_HERSHEY_SIMPLEX, numScale, Scalar(0, 255, 0), numThik, 8);
+				}
 
 			cout << endl;
 
-			hconcat(number_array,concatnated);
+			vector<Mat> number_array{ number[0],number[1],number[2],number[3] };
+			hconcat(number_array, concatnated);
 
-			imshow("concat", concatnated);
+			imshow("concat",concatnated);
 			imshow("contour", contoursMat);
-			imshow("captured number", resizedNP);
+		//	imshow("captured number", resizedNP);
 		}
 
 		imshow("Detecting Number Plate Streaming", image);
